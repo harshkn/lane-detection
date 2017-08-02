@@ -17,12 +17,12 @@ def extractROI(image, verticies):
     return mask
 
 
-cap = cv2.VideoCapture('lane_lines_images/solidYellowLeft.mp4')
+cap = cv2.VideoCapture('lane_lines_images/challenge.mp4')
 
 fourcc = cv2.cv.FOURCC('m', 'p', '4', 'v')
 _, sample_image = cap.read()
 size = (sample_image.shape[1], sample_image.shape[0])
-out = cv2.VideoWriter('Simple_Lane_detector.mp4v', fourcc, 30, size, True)
+out = cv2.VideoWriter('Simple_Lane_detector_challenge.mp4', fourcc, 30, size, True)
 
 while cap.isOpened():
     ret, img_color = cap.read()
@@ -108,6 +108,7 @@ while cap.isOpened():
         # plt.show()
         # To obtain a single line , we can apply linear regression to fit a line to the points.
         # We start by fitting a polynomial of degree one and we get a polynomial for right lane
+
         deg_1_poly = np.polyfit(right_y, right_x, deg=1)
         right_lane_polynomial = np.poly1d(deg_1_poly)
         print('Right lane polynomial :' + str(right_lane_polynomial))
@@ -139,8 +140,8 @@ while cap.isOpened():
 
         img_final = cv2.addWeighted(img_final, 0.8, just_line, 1, 0);
         # showImage(img_final)
-        cv2.imshow('Main Window', img_final)
-        cv2.waitKey(100)
+        # cv2.imshow('Main Window', img_final)
+        # cv2.waitKey(100)
 
         out.write(img_final)
     else:
