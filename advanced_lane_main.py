@@ -11,8 +11,8 @@ cc = CameraCalibration('camera_cal/', rebuild_model=False)
 
 fourcc = cv2.cv.FOURCC('m', 'p', '4', 'v')
 _, sample_image = cap.read()
-size = (1280, 720)
-out = cv2.VideoWriter('Advanced_Lane_detector_2.mp4', fourcc, 25, size, True)
+size = (1280, 900)
+out = cv2.VideoWriter('Advanced_Lane_detector_3.mp4', fourcc, 25, size, True)
 
 at = ApplyThreshold()
 pt = ImageWarper()
@@ -32,9 +32,10 @@ while cap.isOpened():
 
         # Apply perspective transform
         bird_view_mask = pt.get_bird_view(mask)
+        bird_view_im = pt.get_bird_view(masked_im)
 
         # Fit the polynomial
-        [points_right, points_left, info] = fit_line.poly_fit(bird_view_mask=bird_view_mask)
+        [points_right, points_left, info] = fit_line.poly_fit(bird_view_mask=bird_view_mask, bird_view_image=bird_view_im)
         # Overlay the lane markers
         final_image = fit_line.poly_fit_overlay(original_im=original_image, right_lane_point=points_right, left_lane_point=points_left, pt=pt)
 
@@ -46,14 +47,39 @@ while cap.isOpened():
         deviation_text = "Lane deviation from center = {:.2f} m".format(info[2])
         font = cv2.FONT_HERSHEY_TRIPLEX
         cv2.putText(final_image, deviation_text, (30, 90), font, 1, (0, 255, 0), 2)
-        out.write(final_image)
+
         # Display the frame
         # cv2.imshow('main window', fit_line.bird_view_im)
-        # cv2.imshow('main window', final_image)
+
+        sm_undistort = cv2.resize(undist_image, (320, 180))
+        sm_mask_im = cv2.resize(masked_im, (319, 180))
+        sm_bird_view_im = cv2.resize(bird_view_im, (320, 180))
+        sm_bird_view_point = cv2.resize(fit_line.points_im_after, (320, 180))
+        sm_normal_view = cv2.resize(fit_line.normal_point_im, (320, 180))
+
+        deviation_text = "Undistored Image"
+        font = cv2.FONT_HERSHEY_COMPLEX_SMALL
+        cv2.putText(sm_undistort, "Undistored Image", (30, 30), font, 1, (0, 255, 0), 1)
+
+        cv2.putText(sm_mask_im, "Color and Gradient", (30, 30), font, 1, (0, 255, 0), 1)
+        cv2.putText(sm_mask_im, "Thresholding", (40, 50), font, 1, (0, 255, 0), 1)
+        cv2.putText(sm_bird_view_point, "Perspective Transform", (30, 30), font, 1, (0, 255, 0), 1)
+        cv2.putText(sm_bird_view_point, "and Line fitting", (40, 50), font, 1, (0, 255, 0), 1)
+        cv2.putText(sm_normal_view, "Inverse Persp Transform", (20, 30), font, 1, (0, 255, 0), 1)
+
+        all_im = np.hstack((sm_undistort, sm_mask_im, 255 * np.ones((180, 1, 3), dtype=np.uint8), sm_bird_view_point,
+                            sm_normal_view))
+        all_im = np.vstack((all_im, final_image))
+        # print(type(sm_mask_im[0,0,0]))
+        # print (all_im.shape)
+        out.write(all_im)
+
+
+        # cv2.imshow('main window', all_im)
         # cv2.waitKey(10)
     else:
         break
-        out.release()
+        # out.release()
 
 
 
