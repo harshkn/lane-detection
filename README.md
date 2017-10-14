@@ -14,8 +14,7 @@ These are the goals of this project taken from the Udacity assignment page.
 - Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
 ###### Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
-![ScreenShot](line_fit_over_bird.jpg)
-<!-- <img src="line_fit_over_bird.jpg" alt="Drawing" style="width: 500px;"/> -->
+<img src="line_fit_over_bird.jpg" alt="Drawing" style="width: 500px;"/>
 
 
 
