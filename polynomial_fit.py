@@ -2,17 +2,18 @@ from __future__ import division
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from image_warp import ImageWarper
-
 
 class PolynomialFit:
 
     def __init__(self, num_windows=9):
         # self.original_im = im
         self.bird_view_im = None
+        self.points_im_before = None
+        self.points_im_after = None
+        self.normal_point_im = None
         self.num_of_windows = num_windows
 
-    def poly_fit(self, bird_view_mask):
+    def poly_fit(self, bird_view_mask, bird_view_image):
 
         self.bird_view_im = bird_view_mask
         # img = self.bird_view_im.copy()
@@ -75,9 +76,9 @@ class PolynomialFit:
             # update the lane markers with previous slice data if lane data does not exist
             # for that slice
             if abs(init_hist_max_left - points_left_x[ind]) > error_th:
-                upd_points_left_x[ind] = init_hist_max_left + 10
+                upd_points_left_x[ind] = init_hist_max_left
             else:
-                upd_points_left_x[ind] = (points_left_x[ind] + 10)
+                upd_points_left_x[ind] = (points_left_x[ind])
                 init_hist_max_left = points_left_x[ind]
 
             # update the lane markers with previous slice data if lane data does not exist
@@ -107,11 +108,13 @@ class PolynomialFit:
         # plt.show()
         # plt.savefig('right_hist.jpg')
 
-        # Annotate the points on the image
-        # for ind, _ in reversed(list(enumerate(upd_points_right_x))):
-        #     cv2.circle(bird_view_image, (upd_points_right_x[ind], upd_points_right_y[ind]), 3, [0, 255, 0], -1)
-        #     cv2.circle(bird_view_image, (upd_points_left_x[ind], upd_points_left_y[ind]), 3, [0, 255, 0], -1)
+        temp_image_copy = bird_view_image.copy()
 
+        # Annotate the points on the image
+        for ind, _ in reversed(list(enumerate(upd_points_right_x))):
+            cv2.circle(temp_image_copy, (upd_points_right_x[ind], upd_points_right_y[ind]), 6, [0, 255, 0], -1)
+            cv2.circle(temp_image_copy, (upd_points_left_x[ind], upd_points_left_y[ind]), 6, [0, 255, 0], -1)
+        self.points_im_before = temp_image_copy
         # cv2.imwrite('overlay_on_im.jpg', bird_view_image)
 
         # Polyfit the points
@@ -154,10 +157,10 @@ class PolynomialFit:
         info = self.get_curvature(img.shape, left_val, right_val)
 
         for ind, _ in enumerate(x_val):
-            cv2.circle(img, (x_val_left[ind], y_val_left[ind]), 2, [255, 255, 0], -1)
+            cv2.circle(temp_image_copy, (x_val_left[ind], y_val_left[ind]), 2, [0, 0, 255], -1)
         for ind, _ in enumerate(x_val):
-            cv2.circle(img, (x_val_right[ind], y_val_right[ind]), 2, [255, 255, 0], -1)
-
+            cv2.circle(temp_image_copy, (x_val_right[ind], y_val_right[ind]), 2, [0, 0, 255], -1)
+        self.points_im_after = temp_image_copy
         return [x_val_right, list(y_val_right)], [x_val_left, list(y_val_left)], info
 
     @staticmethod
@@ -196,8 +199,6 @@ class PolynomialFit:
         # print(left_curve, right_curve, vehicle_dev)
         return [left_curve, right_curve, vehicle_dev]
 
-
-
     def poly_fit_overlay(self, original_im, right_lane_point, left_lane_point, pt):
         x_val_right, y_val_right = right_lane_point
         x_val_left, y_val_left = left_lane_point
@@ -207,9 +208,20 @@ class PolynomialFit:
 
         blank_img = np.zeros_like(original_im).astype(np.uint8)
 
+        # for ind, _ in enumerate(x_val_left):
+        #     cv2.circle(self.normal_point_im, (x_val_left[ind], y_val_left[ind]), 6, [255, 255, 0], -1)
+        # for ind, _ in enumerate(x_val_left):
+        #     cv2.circle(self.normal_point_im, (x_val_right[ind], y_val_right[ind]), 6, [255, 255, 0], -1)
+
+        self.normal_point_im = blank_img.copy()
         for ind, _ in enumerate(norm_right):
-            cv2.circle(blank_img, (norm_right[ind]), 4, [0, 0, 255], -1)
-            cv2.circle(blank_img, (norm_left[ind]), 4, [0, 0, 255], -1)
+            cv2.circle(self.normal_point_im, (norm_right[ind]), 7, [0, 0, 255], -1)
+            cv2.circle(self.normal_point_im, (norm_left[ind]), 7, [0, 0, 255], -1)
+
+        for ind, _ in enumerate(norm_right):
+            cv2.circle(blank_img, (norm_right[ind]), 3, [0, 0, 255], -1)
+            cv2.circle(blank_img, (norm_left[ind]), 3, [0, 0, 255], -1)
+
 
         rev_norm_left = list(reversed(norm_left))
         full_poly = np.array([norm_right + rev_norm_left + [norm_right[0]]], dtype=np.int32)
@@ -217,7 +229,7 @@ class PolynomialFit:
         cv2.fillPoly(blank_img, full_poly, (0, 255, 0))
         # print(norm_right[0], norm_right[-1])
         # print(norm_left[0], norm_left[-1])
-
+        self.normal_point_im = cv2.addWeighted(original_im, 1, self.normal_point_im, 1, 1)
         result = cv2.addWeighted(original_im, 1, blank_img, 0.3, 0)
 
         return result
