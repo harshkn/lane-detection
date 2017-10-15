@@ -15,7 +15,19 @@ These are the goals of this project taken from the Udacity assignment page.
 - Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.  
 
 ###### Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
-<img src="line_fit_over_bird.jpg" width="400"/>
+Initial step is to compute the camera calibration matrix to undistort the images. This is done by using a set of chess board pattern images in which chess board pattern is on a plane surface. Atleast 10 chessboard pattern images are required for camera calibration matrix computation.  
+
+There are various kinds of distortion that could occur in the images taken and the ones we consider correcting in this problem are  radial and tangential distortion. Radial distortion results in straight lines appearing curved/bulged out. The bulging increases with the distance from the center. Tangential distortion occurs due to misalignment of lens wrt projection plane(or imaging plane). This results in some areas seeming nearer than other. 
+
+Camera intrinsic and extrinsic parameters are also required to perform camera calibration. Intrinsic parameters are as the name suggests, intrinsic to the camera. That is the focal length, camera principle point and skew. Extrinsic parameters include the rotation and translation matrices. 
+
+
+OpenCV api for camera calibration returns distortion coefficients along with camera calibration matrix. 
+
+ 
+<img src="images/orig.jpg" width="400"/><img src="images/undist.jpg" width="400"/>
+
+
 
 
 
